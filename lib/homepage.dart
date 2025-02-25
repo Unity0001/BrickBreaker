@@ -12,14 +12,17 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+enum direction{ UP, DOWN}
+
 class _HomePageState extends State<HomePage> {
   // ball variables
   double ballX = 0;
   double ballY = 0;
+  var ballDirection = direction.DOWN;
 
   //player variable
-  double playerX = 0;
-  double playerWidht = 0.2;
+  double playerX = -0.2;
+  double playerWidht = 0.4;
 
   //game  settings
   bool hasGameStarted = false;
@@ -27,10 +30,31 @@ class _HomePageState extends State<HomePage> {
   void startGame() {
     hasGameStarted = true;
     Timer.periodic(Duration(milliseconds: 10), (timer) {
-      setState(() {
-        ballY += 0.001;
+
+      updateDirection();
+
+      moveBall();
       });
+    }
+
+  void moveBall() {
+    setState (() {
+      if (ballDirection == direction.DOWN) {
+        ballY += 0.01;
+      } else if (ballDirection == direction.UP) {
+        ballY -= 0.01;
+      }
     });
+  }
+
+  void updateDirection() {
+    setState(() {
+      if (ballY >= 0.9 && ballX >= playerX && ballY <= playerX + playerWidht) {
+        ballDirection = direction.UP;
+      } else if (ballY <= 0.9) {
+        ballDirection = direction.DOWN;
+      }
+    });  
   }
 
   void moveLeft() {
@@ -49,6 +73,19 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+   void onHorizontalDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      double newPlayerX = playerX + (details.primaryDelta! / MediaQuery.of(context).size.width);
+      if (newPlayerX > 1 - playerWidht) {
+        playerX = 1 - playerWidht; 
+      } else if (newPlayerX < -1) {
+        playerX = -1; 
+      } else {
+        playerX = newPlayerX;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
@@ -63,6 +100,7 @@ class _HomePageState extends State<HomePage> {
       },
       child: GestureDetector(
       onTap: startGame,
+      onHorizontalDragUpdate: onHorizontalDragUpdate,
       child: Scaffold(
         backgroundColor: Colors.purple[100],
         body: Center(
@@ -84,22 +122,7 @@ class _HomePageState extends State<HomePage> {
               ),
 
               //where is playerX?
-              Container(
-                alignment: Alignment(playerX, 0.9),
-                child: Container(
-                  color: Colors.red,
-                  width: 4,
-                  height: 15,
-                ),
-              ),
-              Container(
-                alignment: Alignment(playerX + playerWidht, 0.9),
-                child: Container(
-                  color: Colors.green,
-                  width: 4,
-                  height: 15,
-                ),
-              )
+              
             ],
           ),
         ),
