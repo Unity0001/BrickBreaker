@@ -18,14 +18,11 @@ flutter --version
 ```
 
 ## 🚀 Clonando o Repositório
-   ```sh
-   cd caminho/para/pasta
-   ```
-3. Clone o repositório:
+1. Clone o repositório:
    ```sh
    git clone https://github.com/Unity0001/BrickBreaker
    ```
-4. Acesse a pasta do projeto:
+2. Acesse a pasta do projeto:
    ```sh
    cd BrickBreaker
    ```
