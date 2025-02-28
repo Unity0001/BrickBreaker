@@ -1,16 +1,44 @@
-# brickbreaker
+# 🎮 Brick Breaker - Flutter
 
-A new Flutter project.
+Um jogo clássico **Brick Breaker** desenvolvido em **Flutter**. 
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+# 📌 Como Clonar e Rodar este Projeto Flutter
 
-A few resources to get you started if this is your first Flutter project:
+## 📥 Pré-requisitos
+Antes de começar, certifique-se de ter instalado:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Git**: [Baixar Git](https://git-scm.com/downloads)
+- **Flutter**: [Instalar Flutter](https://docs.flutter.dev/get-started/install)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Verifique as instalações com:
+```sh
+git --version
+flutter --version
+```
+
+## 🚀 Clonando o Repositório
+1. Clone o repositório:
+   ```sh
+   git clone https://github.com/Unity0001/BrickBreaker
+   ```
+2. Acesse a pasta do projeto:
+   ```sh
+   cd BrickBreaker
+   ```
+
+## 📦 Instalando Dependências
+Rode o seguinte comando para baixar as dependências do Flutter:
+```sh
+flutter pub get
+```
+
+## ▶️ Executando o Projeto
+1. Conecte um dispositivo ou inicie um emulador:
+   ```sh
+   flutter devices
+   ```
+2. Execute o projeto:
+   ```sh
+   flutter run
+   ```
