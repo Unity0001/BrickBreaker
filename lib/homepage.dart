@@ -17,7 +17,6 @@ class HomePage extends StatefulWidget {
 enum direction { UP, DOWN, LEFT, RIGHT }
 
 class _HomePageState extends State<HomePage> {
-  // ball variables
   double ballX = 0;
   double ballY = 0;
   double ballXincrement = 0.02;
@@ -25,11 +24,9 @@ class _HomePageState extends State<HomePage> {
   var ballXDirection = direction.LEFT;
   var ballYDirection = direction.DOWN;
 
-  //player variables
   double playerX = -0.2;
   double playerWidht = 0.4;
 
-  //bricks variables
   static double firstBricksX = -1 + wallGap;
   static double firstBricksY = -0.9;
   static double bricksWidht = 0.4;
@@ -47,7 +44,6 @@ class _HomePageState extends State<HomePage> {
     [firstBricksX + 2 * (bricksWidht + bricksGap), firstBricksY, false],
   ];
 
-  //game  settings
   bool hasGameStarted = false;
   bool isGameOver = false;
 
@@ -58,7 +54,6 @@ class _HomePageState extends State<HomePage> {
 
       moveBall();
 
-      //verify player is dead
       if (isPlayerDead()) {
         timer.cancel();
         isGameOver = true;
@@ -78,14 +73,12 @@ class _HomePageState extends State<HomePage> {
 
   void moveBall() {
     setState(() {
-      //vertically
       if (ballYDirection == direction.DOWN) {
         ballY += ballYincrement;
       } else if (ballYDirection == direction.UP) {
         ballY -= ballYincrement;
       }
 
-      //horizontally
       if (ballXDirection == direction.LEFT) {
         ballX -= ballXincrement;
       } else if (ballXDirection == direction.RIGHT) {
@@ -96,19 +89,16 @@ class _HomePageState extends State<HomePage> {
 
   void updateDirection() {
     setState(() {
-      //ball when hits player
       if (ballY >= 0.9 && ballX >= playerX && ballX <= playerX + playerWidht) {
         ballYDirection = direction.UP;
-      }
-      //ball when hits top of screen
-      else if (ballY <= -1) {
+      } else if (ballY <= -1) {
         ballYDirection = direction.DOWN;
       }
-      //ball goes left when hits right wall
+
       if (ballX >= 1) {
         ballXDirection = direction.LEFT;
       }
-      //ball goes right when hits left wall
+
       if (ballX <= -1) {
         ballXDirection = direction.RIGHT;
       }
@@ -213,6 +203,23 @@ class _HomePageState extends State<HomePage> {
     return '';
   }
 
+  void resetGame() {
+    setState(() {
+      ballX = 0;
+      ballY = 0;
+      ballXDirection = direction.LEFT;
+      ballYDirection = direction.DOWN;
+      playerX = -0.2;
+      MyBricks = [
+        [firstBricksX + 0 * (bricksWidht + bricksGap), firstBricksY, false],
+        [firstBricksX + 1 * (bricksWidht + bricksGap), firstBricksY, false],
+        [firstBricksX + 2 * (bricksWidht + bricksGap), firstBricksY, false],
+      ];
+      isGameOver = false;
+      hasGameStarted = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -223,25 +230,23 @@ class _HomePageState extends State<HomePage> {
         body: Center(
           child: Stack(
             children: [
-              // tap to play
-              CoverScreen(hasGameStarted: hasGameStarted),
-
-              //ball
+              CoverScreen(
+                hasGameStarted: hasGameStarted,
+                isGameOver: isGameOver,
+              ),
               MyBall(
                 ballX: ballX,
                 ballY: ballY,
               ),
-
-              //Game Over
-              GameOverScreen(isGameOver: isGameOver),
-
-              //player
+              GameOverScreen(
+                isGameOver: isGameOver,
+                onRestart: resetGame,
+              ),
               MyPlayer(
                 playerX: playerX,
                 playerWidht: playerWidht,
+                hasGameStarted: hasGameStarted,
               ),
-
-              //bricks
               MyBrick(
                 bricksX: MyBricks[0][0],
                 bricksY: MyBricks[0][1],

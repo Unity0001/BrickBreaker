@@ -1,15 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-class GameOverScreen extends StatelessWidget {
+class GameOverScreen extends StatefulWidget {
   final bool isGameOver;
-  final function;
+  final Function onRestart;
 
-  GameOverScreen({required this.isGameOver, this.function});
+  GameOverScreen({required this.isGameOver, required this.onRestart});
 
   @override
+  _GameOverScreenState createState() => _GameOverScreenState();
+}
+
+class _GameOverScreenState extends State<GameOverScreen> {
+  @override
   Widget build(BuildContext context) {
-    return isGameOver
+    return widget.isGameOver
         ? Stack(
             children: [
               Container(
@@ -36,7 +41,9 @@ class GameOverScreen extends StatelessWidget {
               Container(
                 alignment: Alignment(0, 0),
                 child: GestureDetector(
-                  onTap: function,
+                  onTap: () {
+                    widget.onRestart();
+                  },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
@@ -46,7 +53,7 @@ class GameOverScreen extends StatelessWidget {
                         'Play Again',
                         style: TextStyle(color: Colors.white),
                       ),
-                    )
+                    ),
                   ),
                 ),
               )
