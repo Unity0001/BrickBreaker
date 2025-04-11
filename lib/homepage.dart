@@ -1,57 +1,78 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:brickbreaker/ball.dart';
 import 'package:brickbreaker/bricks.dart';
 import 'package:brickbreaker/coverscreen.dart';
 import 'package:brickbreaker/gameoverscreen.dart';
 import 'package:brickbreaker/player.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
-enum direction { UP, DOWN, LEFT, RIGHT }
+// ignore: camel_case_types
+enum direction { up, down, left, right }
 
 class _HomePageState extends State<HomePage> {
   double ballX = 0;
   double ballY = 0;
   double ballXincrement = 0.02;
   double ballYincrement = 0.01;
-  var ballXDirection = direction.LEFT;
-  var ballYDirection = direction.DOWN;
+  var ballXDirection = direction.left;
+  var ballYDirection = direction.down;
 
   double playerX = -0.2;
   double playerWidht = 0.4;
+  double sensitivity = 1.5;
 
-  static double firstBricksX = -1 + wallGap;
-  static double firstBricksY = -0.9;
-  static double bricksWidht = 0.4;
+  static double bricksWidht = 0.3;
   static double bricksHeight = 0.05;
-  static double bricksGap = 0.2;
-  static int numberOfBricksInRow = 3;
-  static double wallGap = 0.5 *
-      (2 -
-          numberOfBricksInRow * bricksWidht -
-          (numberOfBricksInRow - 1) * bricksGap);
+  static double bricksGap = 0.1;
+  int numberOfBricksInRow = 4;
+  int numberOfRows = 1;
+  int hitPoints = 1;
+  int round = 1;
 
-  List MyBricks = [
-    [firstBricksX + 0 * (bricksWidht + bricksGap), firstBricksY, false],
-    [firstBricksX + 1 * (bricksWidht + bricksGap), firstBricksY, false],
-    [firstBricksX + 2 * (bricksWidht + bricksGap), firstBricksY, false],
-  ];
+  late double wallGap;
+  // ignore: non_constant_identifier_names
+  late List<List<dynamic>> MyBricks;
 
   bool hasGameStarted = false;
   bool isGameOver = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateBricks();
+  }
+
+  void _generateBricks() {
+    wallGap = 0.5 *
+        (2 -
+            numberOfBricksInRow * bricksWidht -
+            (numberOfBricksInRow - 1) * bricksGap);
+
+    double startY = -0.9;
+    MyBricks = [];
+
+    for (int row = 0; row < numberOfRows; row++) {
+      for (int col = 0; col < numberOfBricksInRow; col++) {
+        double x = -1 + wallGap + col * (bricksWidht + bricksGap);
+        double y = startY + row * (bricksHeight + 0.05);
+        MyBricks.add([x, y, hitPoints]);
+      }
+    }
+  }
 
   void startGame() {
     hasGameStarted = true;
     Timer.periodic(Duration(milliseconds: 10), (timer) {
       updateDirection();
-
       moveBall();
 
       if (isPlayerDead()) {
@@ -63,143 +84,108 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  bool isPlayerDead() {
-    if (ballY >= 1) {
-      return true;
-    }
-
-    return false;
-  }
+  bool isPlayerDead() => ballY >= 1;
 
   void moveBall() {
     setState(() {
-      if (ballYDirection == direction.DOWN) {
-        ballY += ballYincrement;
-      } else if (ballYDirection == direction.UP) {
-        ballY -= ballYincrement;
-      }
-
-      if (ballXDirection == direction.LEFT) {
-        ballX -= ballXincrement;
-      } else if (ballXDirection == direction.RIGHT) {
-        ballX += ballXincrement;
-      }
+      ballY += (ballYDirection == direction.down ? 1 : -1) * ballYincrement;
+      ballX += (ballXDirection == direction.right ? 1 : -1) * ballXincrement;
     });
   }
 
   void updateDirection() {
     setState(() {
       if (ballY >= 0.9 && ballX >= playerX && ballX <= playerX + playerWidht) {
-        ballYDirection = direction.UP;
+        ballYDirection = direction.up;
+
+        double randomOffset = (Random().nextDouble() - 0.5) * 0.01;
+        ballXincrement += randomOffset;
       } else if (ballY <= -1) {
-        ballYDirection = direction.DOWN;
+        ballYDirection = direction.down;
       }
 
-      if (ballX >= 1) {
-        ballXDirection = direction.LEFT;
-      }
-
-      if (ballX <= -1) {
-        ballXDirection = direction.RIGHT;
-      }
+      if (ballX >= 1) ballXDirection = direction.left;
+      if (ballX <= -1) ballXDirection = direction.right;
     });
   }
 
   void moveLeft() {
     setState(() {
-      if (!(playerX - 0.2 < -1)) {
-        playerX -= 0.2;
-      }
+      if (playerX - 0.2 > -1) playerX -= 0.2;
     });
   }
 
   void moveRight() {
     setState(() {
-      if (!(playerX + playerWidht >= 1)) {
-        playerX += 0.2;
-      }
+      if (playerX + playerWidht < 1) playerX += 0.2;
     });
   }
 
   void onHorizontalDragUpdate(DragUpdateDetails details) {
     setState(() {
-      double newPlayerX =
-          playerX + (details.primaryDelta! / MediaQuery.of(context).size.width);
-      if (newPlayerX > 1 - playerWidht) {
-        playerX = 1 - playerWidht;
-      } else if (newPlayerX < -1) {
-        playerX = -1;
-      } else {
-        playerX = newPlayerX;
-      }
+      double newPlayerX = playerX +
+          (details.primaryDelta! *
+              sensitivity /
+              MediaQuery.of(context).size.width);
+      playerX = newPlayerX.clamp(-1.0, 1 - playerWidht);
     });
   }
 
   void checkForBrokenBricks() {
     for (int i = 0; i < MyBricks.length; i++) {
-      if (ballX >= MyBricks[i][0] &&
-          ballX <= MyBricks[i][0] + bricksWidht &&
-          ballY <= MyBricks[i][1] + bricksHeight &&
-          MyBricks[i][2] == false) {
+      double brickX = MyBricks[i][0];
+      double brickY = MyBricks[i][1];
+      int lives = MyBricks[i][2];
+
+      if (ballX >= brickX &&
+          ballX <= brickX + bricksWidht &&
+          ballY <= brickY + bricksHeight &&
+          lives > 0) {
         setState(() {
-          MyBricks[i][2] = true;
+          MyBricks[i][2]--;
 
-          double leftSideDist = (MyBricks[i][0] - ballX).abs();
-          double rightSideDist = (MyBricks[i][0] + ballX).abs();
-          double topSideDist = (MyBricks[i][1] - ballX).abs();
-          double bottomSideDist = (MyBricks[i][1] + ballX).abs();
+          double leftDist = (brickX - ballX).abs();
+          double rightDist = (brickX + bricksWidht - ballX).abs();
+          double topDist = (brickY - ballY).abs();
+          double bottomDist = (brickY + bricksHeight - ballY).abs();
 
-          String min =
-              findMin(leftSideDist, rightSideDist, topSideDist, bottomSideDist);
+          String min = findMin(leftDist, rightDist, topDist, bottomDist);
 
           switch (min) {
             case 'left':
-              ballXDirection = direction.LEFT;
-
+              ballXDirection = direction.left;
               break;
             case 'right':
-              ballXDirection = direction.RIGHT;
-
+              ballXDirection = direction.right;
               break;
-            case 'up':
-              ballYDirection = direction.UP;
-
+            case 'top':
+              ballYDirection = direction.up;
               break;
-            case 'down':
-              ballYDirection = direction.DOWN;
-
+            case 'bottom':
+              ballYDirection = direction.down;
               break;
-            default:
           }
         });
       }
     }
+
+    bool allBroken = MyBricks.every((b) => b[2] == 0);
+    if (allBroken) {
+      round++;
+      hitPoints++;
+      numberOfRows = min(numberOfRows + 1, 5);
+      ballXincrement += 0.002;
+      ballYincrement += 0.002;
+      _generateBricks();
+    }
   }
 
   String findMin(double a, double b, double c, double d) {
-    List<double> myList = [
-      a,
-      b,
-      c,
-      d,
-    ];
-
-    double currentMin = a;
-    for (int i = 0; i < myList.length; i++) {
-      if (myList[i] < currentMin) {
-        currentMin = myList[i];
-      }
-    }
-
-    if ((currentMin - a).abs() < 0.01) {
-      return 'left';
-    } else if ((currentMin - b).abs() < 0.01) {
-      return 'right';
-    } else if ((currentMin - c).abs() < 0.01) {
-      return 'top';
-    } else if ((currentMin - d).abs() < 0.01) {
-      return 'bottom';
-    }
+    double minVal = [a, b, c, d].reduce(min);
+    if ((minVal - a).abs() < 0.01) return 'left';
+    if ((minVal - b).abs() < 0.01) return 'right';
+    if ((minVal - c).abs() < 0.01) return 'top';
+    if ((minVal - d).abs() < 0.01) return 'bottom';
     return '';
   }
 
@@ -207,16 +193,17 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       ballX = 0;
       ballY = 0;
-      ballXDirection = direction.LEFT;
-      ballYDirection = direction.DOWN;
+      ballXDirection = direction.left;
+      ballYDirection = direction.down;
       playerX = -0.2;
-      MyBricks = [
-        [firstBricksX + 0 * (bricksWidht + bricksGap), firstBricksY, false],
-        [firstBricksX + 1 * (bricksWidht + bricksGap), firstBricksY, false],
-        [firstBricksX + 2 * (bricksWidht + bricksGap), firstBricksY, false],
-      ];
-      isGameOver = false;
+      ballXincrement = 0.02;
+      ballYincrement = 0.01;
+      numberOfRows = 1;
+      round = 1;
+      hitPoints = 1;
       hasGameStarted = false;
+      isGameOver = false;
+      _generateBricks();
     });
   }
 
@@ -231,43 +218,23 @@ class _HomePageState extends State<HomePage> {
           child: Stack(
             children: [
               CoverScreen(
-                hasGameStarted: hasGameStarted,
-                isGameOver: isGameOver,
-              ),
-              MyBall(
-                ballX: ballX,
-                ballY: ballY,
-              ),
-              GameOverScreen(
-                isGameOver: isGameOver,
-                onRestart: resetGame,
-              ),
+                  hasGameStarted: hasGameStarted, isGameOver: isGameOver),
+              GameOverScreen(isGameOver: isGameOver, onRestart: resetGame),
+              MyBall(ballX: ballX, ballY: ballY),
               MyPlayer(
                 playerX: playerX,
                 playerWidht: playerWidht,
                 hasGameStarted: hasGameStarted,
               ),
-              MyBrick(
-                bricksX: MyBricks[0][0],
-                bricksY: MyBricks[0][1],
-                bricksBroken: MyBricks[0][2],
-                bricksHeight: bricksHeight,
-                bricksWidht: bricksWidht,
-              ),
-              MyBrick(
-                bricksX: MyBricks[1][0],
-                bricksY: MyBricks[1][1],
-                bricksBroken: MyBricks[1][2],
-                bricksHeight: bricksHeight,
-                bricksWidht: bricksWidht,
-              ),
-              MyBrick(
-                bricksX: MyBricks[2][0],
-                bricksY: MyBricks[2][1],
-                bricksBroken: MyBricks[2][2],
-                bricksHeight: bricksHeight,
-                bricksWidht: bricksWidht,
-              ),
+              for (var brick in MyBricks)
+                MyBrick(
+                  bricksX: brick[0],
+                  bricksY: brick[1],
+                  bricksBroken: brick[2] == 0,
+                  bricksHeight: bricksHeight,
+                  bricksWidht: bricksWidht,
+                  hitPointsLeft: brick[2],
+                ),
             ],
           ),
         ),

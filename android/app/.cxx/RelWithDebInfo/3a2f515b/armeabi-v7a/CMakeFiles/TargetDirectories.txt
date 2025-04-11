@@ -1,0 +1,2 @@
+C:/Users/guilh/Downloads/Portfolio/brickbreaker/android/app/.cxx/RelWithDebInfo/3a2f515b/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/guilh/Downloads/Portfolio/brickbreaker/android/app/.cxx/RelWithDebInfo/3a2f515b/armeabi-v7a/CMakeFiles/rebuild_cache.dir

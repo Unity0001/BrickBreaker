@@ -1,63 +1,49 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
-class MyBrick extends StatefulWidget {
-  final double bricksY;
+class MyBrick extends StatelessWidget {
   final double bricksX;
-  final double bricksHeight;
+  final double bricksY;
   final double bricksWidht;
+  final double bricksHeight;
   final bool bricksBroken;
+  final int hitPointsLeft;
 
-  MyBrick({
-    required this.bricksHeight,
-    required this.bricksWidht,
+  const MyBrick({
+    super.key,
     required this.bricksX,
     required this.bricksY,
+    required this.bricksWidht,
+    required this.bricksHeight,
     required this.bricksBroken,
+    required this.hitPointsLeft,
   });
 
-  @override
-  _MyBrickState createState() => _MyBrickState();
-}
-
-class _MyBrickState extends State<MyBrick> {
-  late Color brickColor;
-
-  @override
-  void initState() {
-    super.initState();
-    brickColor = _generateRandomColor();
-  }
-
-  Color _generateRandomColor() {
-    return Color.fromRGBO(
-      Random().nextInt(156) + 50,
-      Random().nextInt(156) + 50,
-      Random().nextInt(156) + 50,
-      1,
-    );
+  Color getColor() {
+    switch (hitPointsLeft) {
+      case 3:
+        return Colors.red.shade900;
+      case 2:
+        return Colors.orange.shade600;
+      case 1:
+        return Colors.yellow.shade600;
+      default:
+        return Colors.transparent;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.bricksBroken
-        ? Container()
-        : Container(
-            alignment: Alignment(
-                (2 * widget.bricksX + widget.bricksWidht) /
-                    (2 - widget.bricksWidht),
-                widget.bricksY),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: Container(
-                height: MediaQuery.of(context).size.height *
-                    widget.bricksHeight /
-                    2,
-                width:
-                    MediaQuery.of(context).size.width * widget.bricksWidht / 2,
-                color: brickColor,
-              ),
-            ),
-          );
+    return Positioned(
+      left: (bricksX + 1) * MediaQuery.of(context).size.width / 2,
+      top: (bricksY + 1) * MediaQuery.of(context).size.height / 2,
+      child: Container(
+        width: bricksWidht * MediaQuery.of(context).size.width / 2,
+        height: bricksHeight * MediaQuery.of(context).size.height / 2,
+        decoration: BoxDecoration(
+          color: bricksBroken ? Colors.transparent : getColor(),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
   }
 }
