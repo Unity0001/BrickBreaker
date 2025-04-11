@@ -19,6 +19,9 @@ class HomePage extends StatefulWidget {
 enum direction { up, down, left, right }
 
 class _HomePageState extends State<HomePage> {
+  bool isPause = false;
+  bool showSettings = false;
+
   double ballX = 0;
   double ballY = 0;
   double ballXincrement = 0.02;
@@ -28,7 +31,7 @@ class _HomePageState extends State<HomePage> {
 
   double playerX = -0.2;
   double playerWidht = 0.4;
-  double sensitivity = 1.5;
+  double sensitivity = 1.0;
 
   static double bricksWidht = 0.3;
   static double bricksHeight = 0.05;
@@ -72,6 +75,8 @@ class _HomePageState extends State<HomePage> {
   void startGame() {
     hasGameStarted = true;
     Timer.periodic(Duration(milliseconds: 10), (timer) {
+      if (isPause) return;
+
       updateDirection();
       moveBall();
 
@@ -122,12 +127,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   void onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (isPause) return;
+
     setState(() {
-      double newPlayerX = playerX +
-          (details.primaryDelta! *
-              sensitivity /
-              MediaQuery.of(context).size.width);
-      playerX = newPlayerX.clamp(-1.0, 1 - playerWidht);
+      double delta = details.primaryDelta! / MediaQuery.of(context).size.width;
+      double newPlayerX = playerX + delta * sensitivity;
+
+      if (newPlayerX > 1 - playerWidht) {
+        playerX = 1 - playerWidht;
+      } else if (newPlayerX < -1) {
+        playerX = -1;
+      } else {
+        playerX = newPlayerX;
+      }
     });
   }
 
@@ -221,19 +233,79 @@ class _HomePageState extends State<HomePage> {
                   hasGameStarted: hasGameStarted, isGameOver: isGameOver),
               GameOverScreen(isGameOver: isGameOver, onRestart: resetGame),
               MyBall(ballX: ballX, ballY: ballY),
+              ...MyBricks.map((brick) {
+                final brickX = brick[0];
+                final brickY = brick[1];
+                final hitPoints = brick[2];
+                final isBroken = hitPoints <= 0;
+
+                if (isBroken) return SizedBox();
+
+                return MyBrick(
+                  bricksX: brickX,
+                  bricksY: brickY,
+                  bricksWidht: bricksWidht,
+                  bricksHeight: bricksHeight,
+                  bricksBroken: isBroken,
+                  hitPointsLeft: hitPoints,
+                );
+              }).toList(),
               MyPlayer(
                 playerX: playerX,
                 playerWidht: playerWidht,
                 hasGameStarted: hasGameStarted,
               ),
-              for (var brick in MyBricks)
-                MyBrick(
-                  bricksX: brick[0],
-                  bricksY: brick[1],
-                  bricksBroken: brick[2] == 0,
-                  bricksHeight: bricksHeight,
-                  bricksWidht: bricksWidht,
-                  hitPointsLeft: brick[2],
+              Positioned(
+                top: 40,
+                right: 20,
+                child: IconButton(
+                  icon: Icon(Icons.settings, size: 30, color: Colors.black87),
+                  onPressed: () {
+                    setState(() {
+                      showSettings = true;
+                      isPause = true;
+                    });
+                  },
+                ),
+              ),
+              if (showSettings)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.white.withOpacity(0.9),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Configurações",
+                            style: TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 30),
+                        Text(
+                            "Sensibilidade: ${sensitivity.toStringAsFixed(1)}"),
+                        Slider(
+                          value: sensitivity,
+                          min: 0.5,
+                          max: 3.0,
+                          divisions: 25,
+                          label: sensitivity.toStringAsFixed(1),
+                          onChanged: (value) {
+                            setState(() {
+                              sensitivity = value;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 40),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              showSettings = false;
+                              isPause = false;
+                            });
+                          },
+                          child: Text("Voltar ao jogo"),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
             ],
           ),
